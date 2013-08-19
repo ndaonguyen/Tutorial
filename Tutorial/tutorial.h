@@ -48,7 +48,6 @@ public:
 		int heightScalse = pix.height()/scale;
 		pix = pix.scaled(widthScale,heightScalse,Qt::IgnoreAspectRatio, Qt::FastTransformation);	
 		mylabel->setPixmap(pix);
-	//	loadImage("dog.jpg",ui.myLabel);
 	}
 
 	
@@ -58,13 +57,18 @@ private:
 	public slots:
 		void fileAction()
 		{
-			QString fn = QFileDialog::getOpenFileName(this, tr("Open file..."),tr("C:\\"),tr("Image-files (*.jpg *.png *.gif)"));
-		//	ui.nameLabel->setText(fn);
+			QString fn = QFileDialog::getOpenFileName(this, tr("Open file..."),tr("C:\\Users\\ndnguyen\\Desktop\\"),tr("Image-files (*.jpg *.png *.gif)"));
 			strFileName = fn;
 
 			std::string temp = fn.toStdString();
 			char* strPath = (char*)temp.c_str();
 			loadImage(strPath,ui.myLabel);
+
+			QPixmap pix;
+			pix.load(fn);
+			int imgWidth  = pix.width()/2;
+			int imgHeight = pix.height()/2;
+			ui.myLabel->setToolTip("<html><img src='"+fn+"' width='"+QString::number(imgWidth)+"' height='"+QString::number(imgHeight)+"' /></html>");
 		}
 		void cancelAction()
 		{
