@@ -16,7 +16,13 @@ class Tutorial : public QMainWindow
 public:
 	Tutorial(QWidget *parent = 0, Qt::WFlags flags = 0);
 	~Tutorial();
-	
+	QString getRestFromDelimeter(QString pathName,char delimeter)
+	{
+		pathName = pathName.trimmed();
+		int lastSplash = pathName.lastIndexOf(delimeter);
+		QString name = pathName.mid(lastSplash+1,-1);
+		return name;
+	}
 	
 private:
 	Ui::TutorialClass ui;
@@ -39,50 +45,42 @@ private:
 
 			QString strName    = ui.nameEdit->text();
 			QString strBirthday = ui.birthdayEdit->date().toString(Qt::ISODate);
-		//	strFileName
 			MYSQL* connection = database::connectByC();		
+			QString query = tr("INSERT INTO `qt_tracking`.`employee` (`id` ,`name` ,`birthday` ,`img`) VALUES (NULL , '");
+			query = query + strName +"','" + strBirthday+"','" + strFileName+"')" ;
+			
+			std::string query2 = query.toStdString();
+			const char* query1 = query2.c_str();
 			try
 			{
-				/*
-				if (mysql_query(connection,"Select * from employee")==0)
-				{
-					res_set = mysql_store_result(connection);
-					row = mysql_fetch_row(res_set);
-					return true;
-				}			
-				*/
-				QString query = tr("INSERT INTO `qt_tracking`.`employee` (`id` ,`name` ,`birthday` ,`img`) VALUES (NULL , '");
-				query = query + strName +"','" + strBirthday+"','" + strFileName+"')" ;
-				
-				std::string query2 = query.toStdString();
-				const char* query1 = query2.c_str();
-
 			//	QByteArray qTem = query.toUtf8();
 			//	char* query1    = qTem.data();
 				
 				int result = mysql_query(connection,query1);
 				if (result==0)
 				{
-					
-					return true;
-				}
-				else
-				{
-					
-					return false;
-				}
-			
+					//get the last id from table
+					if(mysql_query(connection,"select MAX(id) from `qt_tracking`.`employee`") ==0)
+					{
+						res_set = mysql_store_result(connection);
+						row = mysql_fetch_row(res_set);
+						QString path = QDir::currentPath();
+						QString name = getRestFromDelimeter(strFileName,'/');
+						QString typeFile = getRestFromDelimeter(name,'.');
+						QFile::copy(strFileName, QDir::currentPath() +"/Resources/img/"+row[0]+"."+typeFile);
+						return true;
+					}
+				}			
+				return false;				
 			}
 			catch(const ios_base::failure& e)
 			{
-				
+				return false;
 			}
 			
 			database::closeConnectionC(connection);
 			return true;
 		}
-		
-		
 };
 
 #endif // TUTORIAL_H
