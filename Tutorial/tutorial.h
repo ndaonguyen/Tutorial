@@ -4,6 +4,8 @@
 #include <QtGui/QMainWindow>
 #include <QFileDialog>
 #include <QByteArray>
+#include <QImage>
+#include <QPixmap>
 #include "ui_tutorial.h"
 #include <string>
 #include "database.h"
@@ -23,6 +25,32 @@ public:
 		QString name = pathName.mid(lastSplash+1,-1);
 		return name;
 	}
+	int getScale(QPixmap realImg, QLabel* labelImg)
+	{
+		int imgHeight = realImg.height();
+		int imgWidth  = realImg.width();
+
+		int cellHeight = labelImg->height();
+		int cellWidth  = labelImg->width();
+
+		int scaleWidth  = (int)imgWidth/cellWidth;
+		int scaleHeight = (int)imgHeight/cellHeight;
+		
+		return (scaleHeight<scaleWidth)?scaleWidth:scaleHeight;
+	}
+	void loadImage(char* pathImg,QLabel* mylabel)
+	{
+		QPixmap pix;
+		bool loaded = pix.load(pathImg);
+		QSize pixSize = pix.size();
+		int scale = getScale(pix, ui.myLabel);
+		int widthScale   = pix.width()/scale;
+		int heightScalse = pix.height()/scale;
+		pix = pix.scaled(widthScale,heightScalse,Qt::IgnoreAspectRatio, Qt::FastTransformation);	
+		mylabel->setPixmap(pix);
+	//	loadImage("dog.jpg",ui.myLabel);
+	}
+
 	
 private:
 	Ui::TutorialClass ui;
@@ -33,11 +61,16 @@ private:
 			QString fn = QFileDialog::getOpenFileName(this, tr("Open file..."),tr("C:\\"),tr("Image-files (*.jpg *.png *.gif)"));
 		//	ui.nameLabel->setText(fn);
 			strFileName = fn;
+
+			std::string temp = fn.toStdString();
+			char* strPath = (char*)temp.c_str();
+			loadImage(strPath,ui.myLabel);
 		}
 		void cancelAction()
 		{
 			QApplication::quit();
 		}
+
 		bool saveAction()
 		{
 			MYSQL_RES *res_set;

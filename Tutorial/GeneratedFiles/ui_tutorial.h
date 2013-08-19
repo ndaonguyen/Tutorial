@@ -41,6 +41,7 @@ public:
     QLabel *imgLabel;
     QPushButton *fileEdit;
     QDateEdit *birthdayEdit;
+    QLabel *myLabel;
     QMenuBar *menuBar;
     QToolBar *mainToolBar;
     QStatusBar *statusBar;
@@ -49,12 +50,12 @@ public:
     {
         if (TutorialClass->objectName().isEmpty())
             TutorialClass->setObjectName(QString::fromUtf8("TutorialClass"));
-        TutorialClass->resize(343, 259);
+        TutorialClass->resize(343, 310);
         centralWidget = new QWidget(TutorialClass);
         centralWidget->setObjectName(QString::fromUtf8("centralWidget"));
         horizontalLayoutWidget = new QWidget(centralWidget);
         horizontalLayoutWidget->setObjectName(QString::fromUtf8("horizontalLayoutWidget"));
-        horizontalLayoutWidget->setGeometry(QRect(60, 140, 241, 31));
+        horizontalLayoutWidget->setGeometry(QRect(50, 220, 241, 31));
         horizontalLayout = new QHBoxLayout(horizontalLayoutWidget);
         horizontalLayout->setSpacing(6);
         horizontalLayout->setContentsMargins(11, 11, 11, 11);
@@ -88,6 +89,9 @@ public:
         birthdayEdit = new QDateEdit(centralWidget);
         birthdayEdit->setObjectName(QString::fromUtf8("birthdayEdit"));
         birthdayEdit->setGeometry(QRect(150, 60, 110, 22));
+        myLabel = new QLabel(centralWidget);
+        myLabel->setObjectName(QString::fromUtf8("myLabel"));
+        myLabel->setGeometry(QRect(100, 140, 81, 71));
         TutorialClass->setCentralWidget(centralWidget);
         menuBar = new QMenuBar(TutorialClass);
         menuBar->setObjectName(QString::fromUtf8("menuBar"));
@@ -120,6 +124,7 @@ public:
         birthLabel->setText(QApplication::translate("TutorialClass", "Birthday", 0, QApplication::UnicodeUTF8));
         imgLabel->setText(QApplication::translate("TutorialClass", "Img", 0, QApplication::UnicodeUTF8));
         fileEdit->setText(QApplication::translate("TutorialClass", "Browse ..", 0, QApplication::UnicodeUTF8));
+        myLabel->setText(QString());
     } // retranslateUi
 
 };
