@@ -43,7 +43,7 @@ public:
 		
 		return (scaleHeight<scaleWidth)?scaleWidth:scaleHeight;
 	}
-	void loadImage(char* pathImg,QLabel* mylabel)
+	void loadImage(QString pathImg,QLabel* mylabel)
 	{
 		QPixmap pix;
 		bool loaded = pix.load(pathImg);
@@ -55,33 +55,38 @@ public:
 		mylabel->setPixmap(pix);
 	}
 
+	void setMouseOverImg(QString pathImg,QLabel *imgShow)
+	{
+		/** 
+		Mouse over picture --> get picture bigger
+		**/
+		QPixmap pix;					
+		pix.load(pathImg);
+		int imgWidth  = pix.width()/2;
+		int imgHeight = pix.height()/2;
+		if(pix.width()>thresholdImg)
+		{
+			int scale = pix.width()/standardImgShow;
+			imgWidth  = pix.width()/scale;
+			imgHeight = pix.height()/scale;
+		}
+		imgShow->setToolTip("<html><img src='"+pathImg+"' width='"+QString::number(imgWidth)+"' height='"+QString::number(imgHeight)+"' /></html>");
+	}
+
+
 	
 private:
 	Ui::TutorialClass ui;
 	QString strFileName;
 	public slots:
+		// Register tab
 		void fileAction()
 		{
 			QString fn = QFileDialog::getOpenFileName(this, tr("Open file..."),tr("C:\\Users\\ndnguyen\\Desktop\\"),tr("Image-files (*.jpg *.png *.gif)"));
 			strFileName = fn;
-
-			std::string temp = fn.toStdString();
-			char* strPath = (char*)temp.c_str();
-			loadImage(strPath,ui.myLabel);
+			loadImage(fn,ui.myLabel);
 			// load big pic by tooltip
-			
-			QPixmap pix;
-			pix.load(fn);
-			int imgWidth  = pix.width()/2;
-			int imgHeight = pix.height()/2;
-			if(pix.width()>thresholdImg)
-			{
-				int scale = pix.width()/standardImgShow;
-				imgWidth  = pix.width()/scale;
-				imgHeight = pix.height()/scale;
-			}
-			ui.myLabel->setToolTip("<html><img src='"+fn+"' width='"+QString::number(imgWidth)+"' height='"+QString::number(imgHeight)+"' /></html>");
-			
+			setMouseOverImg(fn,ui.myLabel);
 		}
 		void cancelAction()
 		{
@@ -135,6 +140,97 @@ private:
 			}
 			database::closeConnectionC(connection);
 			return true;
+		}
+		// Log in tab
+		void loginAction()
+		{
+			//check whether 2 required blank are filled
+			QString nameLogin = ui.nameEdit_2->text();
+			QString pswLogin  = ui.passwordEdit_2->text();
+			if(nameLogin.trimmed().isEmpty() || pswLogin.trimmed().isEmpty())
+			{
+				QMessageBox::StandardButton reply;
+				reply = QMessageBox::question(this, "Error filling blank ...", "Please re-enter login information!!!", QMessageBox::Yes | QMessageBox::No);
+				if (reply == QMessageBox::Yes)
+				{
+					ui.nameEdit_2->setFocus();
+					return;
+				}
+				else
+				{
+					cancelAction();
+				}
+			}
+			// check information from database
+			QByteArray tempPwd  = pswLogin.toUtf8();
+			QString temPwd2      = QString(QCryptographicHash::hash((tempPwd),QCryptographicHash::Md5).toHex());
+			
+			QString query = tr("SELECT * FROM `qt_tracking`.`employee` WHERE `name` ='");
+			query = query  + nameLogin + "' AND `password` ='" +temPwd2+"'";
+			
+			std::string query2 = query.toStdString();
+			const char* query1 = query2.c_str();
+			MYSQL* connection = database::connectByC();	
+			MYSQL_RES* result;
+			MYSQL_ROW  row;
+			
+			if(mysql_query(connection,query1)==0)
+			{
+
+				result = mysql_store_result(connection);
+				row    = mysql_fetch_row(result);
+				if(row!=NULL)
+				{					
+					// list that personal information
+						//set hidden
+					ui.nameEdit_2->setHidden(true);
+					ui.passwordEdit_2->setHidden(true);
+					ui.loginButton->setHidden(true);
+					ui.refillButton->setHidden(true);
+					ui.cancelButon->setHidden(true);
+					ui.passwordLabel_2->setText("Birthday");
+					//get location
+					QRect nameEditGeo   = ui.nameEdit_2->geometry();
+					QRect birthEditGeo  = ui.passwordEdit_2->geometry();
+					QRect nameLabelGeo  = ui.nameLabel_2->geometry();
+					QRect birthLabelGeo = ui.passwordLabel_2->geometry();
+					
+					QLabel *birthdayAdd = new QLabel(ui.loginWidget);
+					QString birth       = QString::fromUtf8(row[3]);
+					birthdayAdd->setText(birth);
+					birthdayAdd->setGeometry(birthEditGeo);
+					birthdayAdd->show();
+
+					QLabel *nameAdd    = new QLabel(ui.loginWidget);
+					QString name       = QString::fromUtf8(row[1]);
+					ui.userLabel->setText("Name :"+name);
+					nameAdd->setText(name);
+					nameAdd->setGeometry(nameEditGeo);
+					nameAdd->show();
+
+					int distance        = birthLabelGeo.y() - nameLabelGeo.y();
+					QLabel * imgShow    = new QLabel(ui.loginWidget);
+					imgShow->setSizeIncrement(120,100);
+					imgShow->setText("");
+					imgShow->setGeometry(QRect(QPoint(birthLabelGeo.x(),birthLabelGeo.y()+10), QSize(120,100)));
+					//showPicture
+					QString pathImg = QDir::currentPath() +"/Resources/img/"+QString::fromUtf8(row[4]);
+					loadImage(pathImg,imgShow);
+					setMouseOverImg(pathImg,imgShow);		
+					imgShow->show();
+					
+					// Add more tab : employee list
+					QWidget *listTab = new QWidget();
+					ui.tabWidget->addTab(listTab, "Employee list");
+
+					
+
+
+
+
+					return;
+				}
+			}	
 		}
 };
 
